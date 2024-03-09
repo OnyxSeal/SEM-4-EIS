@@ -1,0 +1,25 @@
+// Library untuk membaca sensor kelembapan tanah
+int sensorPin = A0; // Pin sensor kelembapan tanah terhubung ke pin analog A0
+int sensorValue = 0; // Variabel untuk menyimpan nilai bacaan sensor
+int soilMoisture = 0; // Variabel untuk menyimpan nilai kelembapan tanah
+
+void setup() {
+  // Mulai koneksi serial dengan kecepatan 9600 baud
+  Serial.begin(9600);
+}
+
+void loop() {
+  // Baca nilai analog dari sensor kelembapan tanah
+  sensorValue = analogRead(sensorPin);
+
+  // Konversi nilai analog menjadi kelembapan tanah dalam persen
+  soilMoisture = map(sensorValue, 0, 1023, 100, 0);
+
+  // Tampilkan nilai kelembapan tanah di monitor serial
+  Serial.print("Kelembapan Tanah: ");
+  Serial.print(soilMoisture);
+  Serial.println(" %"); //Gunakan operator % karena nilai maxnya 100
+
+  // Tunda pembacaan untuk stabilitas
+  delay(1000);
+}
