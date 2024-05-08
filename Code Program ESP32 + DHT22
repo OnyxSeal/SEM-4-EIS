@@ -1,0 +1,95 @@
+#include <DHT.h>
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <RTClib.h>
+
+#define DHTPIN 5
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
+
+const int lampu = 13;
+const int lampu2 = 12;
+const int lampu3 = 14;
+float hum;
+float temp;
+
+LiquidCrystal_I2C lcd(0x27, 20, 4); // Alamat I2C dan ukuran LCD (20x4)
+RTC_DS3231 rtc; // Inisialisasi objek RTC_DS3231 untuk mengakses RTC (Real-Time Clock)
+
+void setup() {
+  Serial.begin(9600);
+  dht.begin();
+  pinMode(lampu, OUTPUT);
+  pinMode(lampu2, OUTPUT);
+  pinMode(lampu3, OUTPUT);
+  
+  // Inisialisasi LCD
+  lcd.init();                      
+  lcd.backlight();                 
+  lcd.setCursor(0, 0);             
+  lcd.print("Kelembaban: ");         
+  lcd.setCursor(0, 1);             
+  lcd.print("Suhu: ");      
+  
+  Wire.begin(21, 22);  
+  if (!rtc.begin()) {
+    Serial.println("RTC tidak ditemukan");
+    while (1);
+  }
+}
+
+void loop() {
+  hum = dht.readHumidity();
+  temp = dht.readTemperature();
+
+  Serial.print("Kelembaban: ");
+  Serial.print(hum);
+  Serial.print("%  ");
+  Serial.print("Suhu: ");
+  Serial.print(temp);
+  Serial.println("°C");
+
+  // Tampilkan data di LCD
+  lcd.setCursor(12, 0);
+  lcd.print(hum);
+  lcd.print("%");
+
+  lcd.setCursor(6, 1);
+  lcd.print(temp);
+  lcd.print(" C");
+
+  // Tampilkan waktu
+  DateTime now = rtc.now();
+  lcd.setCursor(0, 2);
+  lcd.print("Time: ");
+  lcd.print(now.hour());
+  lcd.print(":");
+  lcd.print(now.minute());
+  lcd.print(":");
+  lcd.print(now.second());
+  lcd.print(" WIB");
+
+  lcd.setCursor(0, 3);
+  lcd.print("Status:");
+  if (temp >= 35 || hum >= 50) {
+    digitalWrite(lampu, LOW);
+    digitalWrite(lampu2, LOW);
+    digitalWrite(lampu3, HIGH);
+    lcd.setCursor(8, 3);
+    lcd.print(" Panas");
+  } else if (temp >= 15 || hum >= 30) {
+    digitalWrite(lampu, LOW);
+    digitalWrite(lampu2, HIGH);
+    digitalWrite(lampu3, LOW);
+    lcd.setCursor(8, 3);
+    lcd.print(" Normal");
+  } else if (temp < 15 || hum < 30) {
+    digitalWrite(lampu, HIGH);
+    digitalWrite(lampu2, LOW);
+    digitalWrite(lampu3, LOW);
+    lcd.setCursor(8, 3);
+    lcd.print(" Dingin");
+  }
+
+  delay(500);
+}
